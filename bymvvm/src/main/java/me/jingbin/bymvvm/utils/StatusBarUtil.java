@@ -1,24 +1,34 @@
 package me.jingbin.bymvvm.utils;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.TabActivity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.view.ViewCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * Created by Jaeger on 16/2/14.
  * <p>
  * Email: chjie.jaeger@gmail.com
  * GitHub: https://github.com/laobie
+ * GitHub: https://github.com/imflyn/Eyes
  */
 public class StatusBarUtil {
 
@@ -382,10 +392,10 @@ public class StatusBarUtil {
             activity.getWindow()
                     .getDecorView()
                     .setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-           if (activity instanceof TabActivity){
-               activity.getWindow()//兼容TabActivity
-                       .setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-           }
+            if (activity instanceof TabActivity) {
+                activity.getWindow()//兼容TabActivity
+                        .setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            }
         } else {
             activity.getWindow()
                     .setFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
@@ -550,10 +560,140 @@ public class StatusBarUtil {
      * @param context context
      * @return 状态栏高度
      */
-    public static int getStatusBarHeight(Context context) {
+    @SuppressLint("InternalInsetResource")
+    public static int getStatusBarHeight(@NonNull Context context) {
         // 获得状态栏高度
         int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
         return context.getResources().getDimensionPixelSize(resourceId);
+    }
+
+    /***
+     * https://www.mianshigee.com/note/detail/74951tlg/
+     * 详解关于MIUI 9沉浸式状态栏的最新适配
+     * @param activity activity
+     * @param darkMode darkMode
+     * @return
+     */
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @SuppressLint("PrivateApi")
+    public static boolean MIUISetStatusBarLightMode(Activity activity, boolean darkMode) {
+        boolean result = false;
+        Class<? extends Window> clazz = activity.getWindow().getClass();
+        try {
+            int darkModeFlag = 0;
+            Class<?> layoutParams = Class.forName("android.view.MiuiWindowManager$LayoutParams");
+            Field field = layoutParams.getField("EXTRA_FLAG_STATUS_BAR_DARK_MODE");
+            darkModeFlag = field.getInt(layoutParams);
+            Method extraFlagField = clazz.getMethod("setExtraFlags", int.class, int.class);
+            extraFlagField.invoke(activity.getWindow(), darkMode ? darkModeFlag : 0, darkModeFlag);
+            if (darkMode) {
+                Window window = activity.getWindow();
+                window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                window.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            } else {
+                int flag = activity.getWindow().getDecorView().getSystemUiVisibility()
+                        & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                activity.getWindow().getDecorView().setSystemUiVisibility(flag);
+            }
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+//        boolean result = false;
+//        Class<? extends Window> clazz = activity.getWindow().getClass();
+//        try {
+//            int darkModeFlag = 0;
+//            Class<?> layoutParams = Class.forName("android.view.MiuiWindowManager$LayoutParams");
+//            Field field = layoutParams.getField("EXTRA_FLAG_STATUS_BAR_DARK_MODE");
+//            darkModeFlag = field.getInt(layoutParams);
+//            Method extraFlagField = clazz.getMethod("setExtraFlags", int.class, int.class);
+//            extraFlagField.invoke(activity.getWindow(), darkmode ? darkModeFlag : 0, darkModeFlag);
+//            result = true;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return result;
+    }
+
+    public static boolean FlymeSetStatusBarLightMode(Activity activity, boolean darkMode) {
+        boolean result = false;
+        try {
+            WindowManager.LayoutParams lp = activity.getWindow().getAttributes();
+            Field darkFlag = WindowManager.LayoutParams.class
+                    .getDeclaredField("MEIZU_FLAG_DARK_STATUS_BAR_ICON");
+            Field meizuFlags = WindowManager.LayoutParams.class
+                    .getDeclaredField("meizuFlags");
+            darkFlag.setAccessible(true);
+            meizuFlags.setAccessible(true);
+            int bit = darkFlag.getInt(null);
+            int value = meizuFlags.getInt(lp);
+            if (darkMode) {
+                value |= bit;
+            } else {
+                value &= ~bit;
+            }
+            meizuFlags.setInt(lp, value);
+            activity.getWindow().setAttributes(lp);
+            result = true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static void setStatusBarColor(Activity activity, int statusColor) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            StatusBarLollipopCompact.setStatusBarColor(activity, statusColor);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            StatusBarKitKatCompact.setStatusBarColor(activity, statusColor);
+        }
+    }
+
+    /***
+     *
+     * @param activity
+     * @param color
+     *
+     * //        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.color_page_bg));
+     * //        this.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+     */
+    public static void setStatusBarLightMode(Activity activity, @ColorInt int color) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            //判断是否为小米或魅族手机，如果是则将状态栏文字改为黑色
+            if (MIUISetStatusBarLightMode(activity, true) || FlymeSetStatusBarLightMode(activity, true)) {
+                //设置状态栏为指定颜色
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {//5.0
+                    activity.getWindow().setStatusBarColor(color);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {//4.4
+                    //调用修改状态栏颜色的方法
+                    setStatusBarColor(activity, color);
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                //如果是6.0以上将状态栏文字改为黑色，并设置状态栏颜色
+                activity.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                activity.getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                activity.getWindow().setStatusBarColor(color);
+
+                //fitsSystemWindow 为 false, 不预留系统栏位置.
+                ViewGroup mContentView = (ViewGroup) activity.getWindow().findViewById(Window.ID_ANDROID_CONTENT);
+                View mChildView = mContentView.getChildAt(0);
+                if (mChildView != null) {
+                    ViewCompat.setFitsSystemWindows(mChildView, true);
+                    ViewCompat.requestApplyInsets(mChildView);
+                }
+            }
+        }
+    }
+
+    public static void setContentTopPadding(Activity activity, int padding) {
+        ViewGroup mContentView = activity.getWindow().findViewById(Window.ID_ANDROID_CONTENT);
+        mContentView.setPadding(0, padding, 0, 0);
+    }
+
+    public static int getPxFromDp(Context context, float dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
     }
 
     /**

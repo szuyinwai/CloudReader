@@ -30,6 +30,7 @@ import com.example.jingbin.cloudreader.bean.wanandroid.CoinUserInfoBean;
 import com.example.jingbin.cloudreader.data.UserUtil;
 import com.example.jingbin.cloudreader.databinding.ActivityMainBinding;
 import com.example.jingbin.cloudreader.databinding.NavHeaderMainBinding;
+import com.example.jingbin.cloudreader.ui.douban.DoubanTopActivity;
 import com.example.jingbin.cloudreader.ui.menu.NavAboutActivity;
 import com.example.jingbin.cloudreader.ui.menu.NavAdmireActivity;
 import com.example.jingbin.cloudreader.ui.menu.NavDeedBackActivity;
@@ -37,6 +38,7 @@ import com.example.jingbin.cloudreader.ui.menu.NavDownloadActivity;
 import com.example.jingbin.cloudreader.ui.menu.NavHomePageActivity;
 import com.example.jingbin.cloudreader.ui.menu.NavNightModeActivity;
 import com.example.jingbin.cloudreader.ui.menu.SearchActivity;
+import com.example.jingbin.cloudreader.ui.study.StudyMainActivity;
 import com.example.jingbin.cloudreader.ui.wan.WanCenterFragment;
 import com.example.jingbin.cloudreader.ui.wan.WanFragment;
 import com.example.jingbin.cloudreader.ui.wan.WanProjectFragment;
@@ -50,6 +52,7 @@ import com.example.jingbin.cloudreader.utils.GlideUtil;
 import com.example.jingbin.cloudreader.utils.PerfectClickListener;
 import com.example.jingbin.cloudreader.utils.SPUtils;
 import com.example.jingbin.cloudreader.utils.StringFormatUtil;
+import com.example.jingbin.cloudreader.utils.ToastUtil;
 import com.example.jingbin.cloudreader.utils.UpdateUtil;
 import com.example.jingbin.cloudreader.view.CommonTabPagerAdapter;
 import com.example.jingbin.cloudreader.view.OnLoginListener;
@@ -131,7 +134,9 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         bindingView.navView.inflateHeaderView(R.layout.nav_header_main);
         View headerView = bindingView.navView.getHeaderView(0);
         bind = DataBindingUtil.bind(headerView);
-        bind.setViewModel(viewModel);
+        if (null != bind) {
+            bind.setViewModel(viewModel);
+        }
         viewModel.isReadOk.set(SPUtils.isRead());
         viewModel.isReadOkNight.set(SPUtils.isReadNight());
 
@@ -151,6 +156,9 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
         bind.llNavAdmire.setOnClickListener(listener);
         bind.tvRank.setOnClickListener(listener);
         bind.llNavNightMode.setOnClickListener(listener);
+
+        bind.llNavStudyModule.setOnClickListener(listener);
+        bind.llNavStudyMore.setOnClickListener(listener);
 
         viewModel.getUserInfo();
         viewModel.coin.observe(this, new Observer<CoinUserInfoBean>() {
@@ -282,6 +290,12 @@ public class MainActivity extends BaseActivity<MainViewModel, ActivityMainBindin
                             SPUtils.setReadNight(true);
                             viewModel.isReadOkNight.set(true);
                         }
+                        break;
+                    case R.id.ll_nav_study_module:
+                        StudyMainActivity.start(MainActivity.this);
+                        break;
+                    case R.id.ll_nav_study_more:
+                        ToastUtil.showToast("iOS Study");
                         break;
                     default:
                         break;

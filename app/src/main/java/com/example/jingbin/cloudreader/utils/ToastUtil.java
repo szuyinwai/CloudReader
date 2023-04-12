@@ -22,12 +22,10 @@ public class ToastUtil {
     @SuppressLint("ShowToast")
     public static void showToast(String text) {
         if (!TextUtils.isEmpty(text)) {
-            if (mToast == null) {
-                mToast = ToastCompat.makeText(App.getInstance(), text, Toast.LENGTH_SHORT);
-            } else {
+            if (mToast != null) {
                 mToast.cancel();
-                mToast = ToastCompat.makeText(App.getInstance(), text, Toast.LENGTH_SHORT);
             }
+            mToast = ToastCompat.makeText(App.getInstance(), text, Toast.LENGTH_SHORT);
             mToast.setDuration(Toast.LENGTH_SHORT);
             mToast.setText(text);
             mToast.show();
@@ -37,12 +35,10 @@ public class ToastUtil {
     @SuppressLint("ShowToast")
     public static void showToastLong(String text) {
         if (!TextUtils.isEmpty(text)) {
-            if (mToast == null) {
-                mToast = ToastCompat.makeText(App.getInstance(), text, Toast.LENGTH_LONG);
-            } else {
+            if (mToast != null) {
                 mToast.cancel();
-                mToast = ToastCompat.makeText(App.getInstance(), text, Toast.LENGTH_LONG);
             }
+            mToast = ToastCompat.makeText(App.getInstance(), text, Toast.LENGTH_LONG);
             mToast.setDuration(Toast.LENGTH_LONG);
             mToast.setText(text);
             mToast.show();

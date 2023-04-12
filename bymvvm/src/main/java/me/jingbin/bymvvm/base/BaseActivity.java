@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import androidx.annotation.LayoutRes;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.AndroidViewModel;
@@ -121,6 +123,16 @@ public abstract class BaseActivity<VM extends AndroidViewModel, SV extends ViewD
 
     public void setNoTitle() {
         mBaseBinding.toolBar.setVisibility(View.GONE);
+    }
+
+    /***
+     * //        mBaseBinding.toolBar.setBackgroundColor(ContextCompat.getColor(this, R.color.color_page_bg));
+     * //        mBaseBinding.toolBar.setBackgroundResource(R.color.color_page_bg);
+     * //        mBaseBinding.toolBar.setBackground(new ColorDrawable(ContextCompat.getColor(this, R.color.color_page_bg)));
+     */
+    public void setNoTitlePage() {
+        mBaseBinding.toolBar.setVisibility(View.INVISIBLE);
+        mBaseBinding.llRoot.setBackgroundColor(ContextCompat.getColor(this, R.color.color_page_bg));
     }
 
     protected void showLoading() {

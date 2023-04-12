@@ -4,4 +4,5 @@
     <color name="colorToolBar">#ffce3d3a</color>
     <color name="colorWhite">#ffffffff</color>
     <color name="colorTabText">#585858</color>
+    <color name="color_page_bg">#F8F8F8</color>
 </resources>
